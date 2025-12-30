@@ -6,9 +6,12 @@ import psutil
 
 # Model configurations: (model_name, think_enabled, display_name)
 MODELS = [
+    {"model": "qwen3:0.6b", "think": False, "name": "qwen3:0.6b"},
+    {"model": "qwen3:0.6b", "think": True, "name": "qwen3:0.6b (think)"},
     {"model": "qwen3:1.7b", "think": False, "name": "qwen3:1.7b"},
     {"model": "qwen3:1.7b", "think": True, "name": "qwen3:1.7b (think)"},
     {"model": "gemma3:1b", "think": False, "name": "gemma3:1b"},
+    {"model": "gemma3:270m", "think": False, "name": "gemma3:270m"},
     {"model": "deepseek-r1:1.5b", "think": False, "name": "deepseek-r1:1.5b"},
     {"model": "deepseek-r1:1.5b", "think": True, "name": "deepseek-r1:1.5b (think)"},
 ] 
@@ -82,7 +85,7 @@ def run_benchmark(model_name, prompt, think=False):
         "stream": True,    # MUST be True for TTFT
         "think": think,    # Thinking mode toggle
         "options": {
-            "temperature": 0.0, 
+            "temperature": 0.5, 
             "seed": 42
         }
     }
