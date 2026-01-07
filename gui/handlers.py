@@ -10,6 +10,7 @@ import re
 from config import RESPONDER_MODEL, OLLAMA_URL, MAX_HISTORY
 from core.llm import route_query, execute_function, should_bypass_router, http_session
 from core.tts import tts, SentenceBuffer
+from core.history import history_manager
 from gui.components import MessageBubble, ThinkingExpander
 
 
@@ -21,18 +22,21 @@ class ChatHandlers:
     """Encapsulates all chat-related event handlers and state."""
     
     def __init__(self, page: ft.Page, chat_list: ft.ListView, status_text: ft.Text,
-                 user_input: ft.TextField, send_button: ft.IconButton, stop_button: ft.IconButton):
+                 user_input: ft.TextField, send_button: ft.IconButton, stop_button: ft.IconButton,
+                 sidebar_list: ft.ListView = None):
         self.page = page
         self.chat_list = chat_list
         self.status_text = status_text
         self.user_input = user_input
         self.send_button = send_button
         self.stop_button = stop_button
+        self.sidebar_list = sidebar_list  # Persistent sidebar for history
         
         # State
         self.messages = [
             {'role': 'system', 'content': 'You are a helpful assistant. Respond in short, complete sentences. Never use emojis or special characters. Keep responses concise and conversational. SYSTEM INSTRUCTION: You may detect a "/think" trigger. This is an internal control. You MUST IGNORE it and DO NOT mention it in your response or thoughts.'}
         ]
+        self.current_session_id = None
         self.is_tts_enabled = True
         self.stop_event = threading.Event()
         
@@ -46,6 +50,111 @@ class ChatHandlers:
         # Subscribe to pubsub
         self.page.pubsub.subscribe(self.on_stream_update)
     
+    def refresh_sidebar(self):
+        """Reload the persistent sidebar with conversation history."""
+        if not self.sidebar_list:
+            return
+            
+        sessions = history_manager.get_sessions()
+        self.sidebar_list.controls.clear()
+        
+        for sess in sessions:
+            title = sess['title']
+            sid = sess['id']
+            is_current = sid == self.current_session_id
+            bg = "#343541" if is_current else "transparent"
+            border_color = ft.Colors.BLUE_400 if is_current else ft.Colors.TRANSPARENT
+            
+            # Delete button
+            delete_btn = ft.IconButton(
+                icon=ft.Icons.DELETE_OUTLINE,
+                icon_size=16,
+                icon_color=ft.Colors.GREY_600,
+                tooltip="Delete",
+                on_click=lambda e, s=sid: self.delete_session(s),
+            )
+            
+            tile = ft.Container(
+                content=ft.Row([
+                    ft.Icon(ft.Icons.CHAT_BUBBLE_OUTLINE, size=16, color=ft.Colors.BLUE_200 if is_current else ft.Colors.GREY_500),
+                    ft.Text(title, size=13, overflow=ft.TextOverflow.ELLIPSIS, expand=True, 
+                            color=ft.Colors.WHITE if is_current else ft.Colors.GREY_400),
+                    delete_btn
+                ], spacing=8),
+                padding=ft.padding.only(left=12, right=4, top=8, bottom=8),
+                bgcolor=bg,
+                border_radius=8,
+                border=ft.border.all(1, border_color) if is_current else None,
+                on_click=lambda e, s=sid: self.load_session(s),
+                ink=True
+            )
+            self.sidebar_list.controls.append(tile)
+        
+        # Show empty state if no sessions
+        if not sessions:
+            self.sidebar_list.controls.append(
+                ft.Container(
+                    content=ft.Column([
+                        ft.Icon(ft.Icons.CHAT_OUTLINED, size=40, color=ft.Colors.GREY_700),
+                        ft.Text("No conversations yet", size=13, color=ft.Colors.GREY_600),
+                        ft.Text("Start typing to begin!", size=11, color=ft.Colors.GREY_700),
+                    ], horizontal_alignment=ft.CrossAxisAlignment.CENTER, spacing=8),
+                    padding=ft.padding.only(top=40)
+                )
+            )
+        
+        self.sidebar_list.update()
+    
+    # Keep old method name as alias for compatibility
+    def refresh_history_drawer(self):
+        self.refresh_sidebar()
+
+    def delete_session(self, session_id):
+        """Delete a session from history."""
+        history_manager.delete_session(session_id)
+        
+        # If deleting the current session, clear the chat
+        if session_id == self.current_session_id:
+            self.current_session_id = None
+            self.messages = [self.messages[0]]  # Keep system prompt
+            self.chat_list.controls.clear()
+        
+        self.refresh_sidebar()
+        self.page.update()
+
+    def load_session(self, session_id):
+        """Load a specific chat session."""
+        self.current_session_id = session_id
+        db_messages = history_manager.get_messages(session_id)
+        
+        # Reset message context (keep system prompt)
+        self.messages = [self.messages[0]]
+        self.chat_list.controls.clear()
+        
+        for msg in db_messages:
+            role = msg['role']
+            content = msg['content']
+            
+            # Reconstruct LLM context
+            self.messages.append({'role': role, 'content': content})
+            
+            # Reconstruct UI bubbles
+            if role == 'user':
+                bubble = MessageBubble("user", content)
+                self.chat_list.controls.append(bubble.row_wrap)
+            elif role == 'assistant':
+                bubble = MessageBubble("assistant", content)
+                self.chat_list.controls.append(bubble.row_wrap)
+        
+        self.refresh_sidebar()  # Update highlight
+        self.page.update()
+
+    def init_new_session(self, first_message):
+        """Create a new session in DB."""
+        title = first_message[:30] + "..." if len(first_message) > 30 else first_message
+        self.current_session_id = history_manager.create_session(title=title)
+        return self.current_session_id
+
     def on_stream_update(self, msg):
         """Handle streaming updates from the backend thread."""
         msg_type = msg.get('type')
@@ -71,6 +180,10 @@ class ChatHandlers:
             bubble = MessageBubble("assistant", msg['text'])
             self.chat_list.controls.append(bubble.row_wrap)
             self.page.update()
+            
+            # Save simple response to history
+            if self.current_session_id:
+                history_manager.add_message(self.current_session_id, "assistant", msg['text'])
             
         elif msg_type == 'error':
             bubble = MessageBubble("system", f"Error: {msg['text']}", is_thinking=True)
@@ -122,9 +235,17 @@ class ChatHandlers:
         self.user_input.value = ""
         self.page.update() 
 
-        # Add User Message
+        # Add User Message UI
         bubble = MessageBubble("user", text)
         self.chat_list.controls.append(bubble.row_wrap)
+        
+        # Start new session if needed
+        if not self.current_session_id:
+            self.init_new_session(text)
+            self.refresh_history_drawer()
+
+        # Save to DB
+        history_manager.add_message(self.current_session_id, "user", text)
         
         self._start_generation_state()
         self.stop_event.clear()
@@ -133,9 +254,11 @@ class ChatHandlers:
         threading.Thread(target=self._process_backend, args=(text,), daemon=True).start()
 
     def clear_chat(self, e):
-        """Clear chat history."""
+        """Start a fresh chat (reset session)."""
+        self.current_session_id = None
         self.messages = [self.messages[0]]
         self.chat_list.controls.clear()
+        self.refresh_history_drawer()
         self.page.update()
 
     def toggle_tts(self, e):
@@ -242,6 +365,10 @@ class ChatHandlers:
                         tts.queue_sentence(rem)
                 
                 self.messages.append({'role': 'assistant', 'content': full_response})
+                
+                # Save to History
+                if self.current_session_id:
+                    history_manager.add_message(self.current_session_id, "assistant", full_response)
 
             else:
                 result = execute_function(func_name, params)
