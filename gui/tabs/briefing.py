@@ -98,7 +98,7 @@ class BriefingView(QWidget):
         self.layout.addWidget(scroll)
         
         # Load Data
-        # self.load_news()
+        self.load_news()
 
     def load_news(self):
         self.bk_text.setText("Syncing global sources...")

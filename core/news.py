@@ -18,9 +18,10 @@ class NewsManager:
         Get a curated briefing.
         Fetches 'top' and 'technology' news, then asks AI to pick the best ones.
         """
-        # 1. Check cache first (for 'briefing' key)
+        # 1. Check cache first
         if status_callback: status_callback("Checking local cache...")
-        cached = self._get_from_cache("briefing")
+        cache_key = "briefing_ai" if use_ai else "briefing_raw"
+        cached = self._get_from_cache(cache_key)
         if cached:
             return cached
 
@@ -61,7 +62,7 @@ class NewsManager:
             curated_news = self._format_raw_fallback(raw_news)
 
         # 5. Save to cache
-        self.cache["briefing"] = {
+        self.cache[cache_key] = {
             "timestamp": datetime.datetime.now(),
             "data": curated_news
         }

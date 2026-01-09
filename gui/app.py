@@ -79,12 +79,15 @@ class MainWindow(FluentWindow):
         # Lazy load other tabs
         self.chat_lazy = LazyTab(ChatTab, "chatInterface")
         self.planner_lazy = LazyTab(PlannerTab, "plannerInterface")
-        self.briefing_lazy = LazyTab(BriefingView, "briefingInterface")
+        # Eager load briefing for startup fetch
+        self.briefing_view = BriefingView()
+        self.briefing_view.setObjectName("briefingInterface")
+
         self.home_lazy = LazyTab(HomeAutomationTab, "homeInterface")
         
         self.addSubInterface(self.chat_lazy, FIF.CHAT, "Chat")
         self.addSubInterface(self.planner_lazy, FIF.CALENDAR, "Planner")
-        self.addSubInterface(self.briefing_lazy, FIF.DATE_TIME, "Briefing")
+        self.addSubInterface(self.briefing_view, FIF.DATE_TIME, "Briefing")
         self.addSubInterface(self.home_lazy, FIF.LAYOUT, "Home Auto")
         
     def _connect_signals(self):
@@ -127,12 +130,15 @@ class MainWindow(FluentWindow):
         # Get the title bar layout
         layout = self.titleBar.hBoxLayout
         
+        # dynamic search for min button index to ensure we insert BEFORE the window controls
+        min_btn_index = layout.indexOf(self.titleBar.minBtn)
+        
         # Insert a stretch to push monitor toward center (after title/icon, before buttons)
-        layout.insertStretch(4, 1)
+        layout.insertStretch(min_btn_index, 1)
         # Insert the system monitor
-        layout.insertWidget(5, self.system_monitor, 0)
+        layout.insertWidget(min_btn_index + 1, self.system_monitor, 0, Qt.AlignmentFlag.AlignCenter)
         # Insert another stretch after monitor to balance centering
-        layout.insertStretch(6, 1)
+        layout.insertStretch(min_btn_index + 2, 1)
     
     def _on_tab_changed(self, index):
         """Handle lazy loading when switching tabs."""
