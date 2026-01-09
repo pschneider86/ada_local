@@ -14,8 +14,12 @@ class NewsLoaderThread(QThread):
     loaded = Signal(list)
     status_update = Signal(str)
     
+    def __init__(self, use_ai=True):
+        super().__init__()
+        self.use_ai = use_ai
+
     def run(self):
-        news = news_manager.get_briefing(status_callback=self.status_update.emit, use_ai=True)
+        news = news_manager.get_briefing(status_callback=self.status_update.emit, use_ai=self.use_ai)
         self.loaded.emit(news)
 
 class BriefingView(QWidget):
@@ -47,7 +51,7 @@ class BriefingView(QWidget):
         
         # Refresh Button
         refresh_btn = PushButton(FIF.SYNC, "Refresh")
-        refresh_btn.clicked.connect(self.load_news)
+        refresh_btn.clicked.connect(lambda: self.load_news(use_ai=True))
         header_layout.addWidget(refresh_btn)
         
         self.layout.addLayout(header_layout)
@@ -97,11 +101,14 @@ class BriefingView(QWidget):
         scroll.setWidget(container)
         self.layout.addWidget(scroll)
         
-        # Load Data
-        self.load_news()
+        # Load Data (No AI on startup to prevent model load)
+        self.load_news(use_ai=False)
 
-    def load_news(self):
-        self.bk_text.setText("Syncing global sources...")
+    def load_news(self, use_ai=True):
+        if use_ai:
+            self.bk_text.setText("Syncing global sources & Curating with AI...")
+        else:
+            self.bk_text.setText("Fetching latest headlines...")
         
         # Clear list
         while self.news_list_layout.count():
@@ -109,7 +116,7 @@ class BriefingView(QWidget):
             if item.widget():
                 item.widget().deleteLater()
             
-        self.thread = NewsLoaderThread()
+        self.thread = NewsLoaderThread(use_ai=use_ai)
         self.thread.status_update.connect(self.bk_text.setText)
         self.thread.loaded.connect(self.display_news)
         self.thread.start()
