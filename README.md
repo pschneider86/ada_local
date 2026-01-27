@@ -1,80 +1,374 @@
-# A.D.A - Pocket AI
+# 🤖 A.D.A - Pocket AI
 
-A.D.A (Advanced Digital Assistant) is a localized, privacy-focused AI assistant built with PySide6 and powered by local large language models. It provides a comprehensive suite of tools including smart home control, web search, personal planning, and AI-curated news daily briefings.
+<p align="center">
+  <img src="gui/assets/logo.png" alt="A.D.A Logo" width="120" height="120">
+</p>
 
-## 🚀 Features
+**A.D.A** (Advanced Digital Assistant) is a **fully local, privacy-focused AI assistant** for Windows. It combines a beautiful modern GUI with powerful voice control capabilities—all running entirely on YOUR computer with no cloud dependency.
 
-- **Dashboard**: A central hub showing weather (via Open-Meteo), upcoming calendar events, and app status.
-- **AI Chat**: Interactive chat interface with local LLMs (via Ollama), featuring streaming responses and "thinking" tokens.
-- **Daily Briefing**: AI-curated news summaries fetched from DuckDuckGo, categorizing top stories, technology, and science.
-- **Home Automation**: Control TP-Link Kasa smart devices (lights, plugs) directly from the interface.
-- **Web Agent**: A specialized interface for web-based tasks and browsing assistance.
-- **Planner**: Manage your schedule with a local SQLite-backed calendar.
-- **System Monitor**: Real-time CPU and Memory tracking integrated into the title bar.
-- **TTS (Text-to-Speech)**: High-quality voice output using Piper TTS with streaming support.
+> 🔒 **Your data stays on your machine.** No API keys required for core functionality. No subscriptions. No data collection.
 
-## 🛠️ Prerequisites
+---
 
-- **Python**: 3.10 or higher.
-- **Ollama**: Must be installed and running locally.
-- **Hardware**: 
-  - NVIDIA GPU (optional but recommended for the Router model).
-  - ~8GB+ RAM for comfortable model execution.
+## ✨ Key Features
 
-## 📦 Installation
+| Feature | Description |
+|---------|-------------|
+| 🎤 **Voice Control** | Wake word detection ("Jarvis") with natural language commands |
+| 💬 **AI Chat** | Interactive chat with local LLMs via Ollama with streaming responses |
+| 🏠 **Smart Home** | Control TP-Link Kasa smart lights and plugs from the app |
+| 📅 **Planner** | Manage calendar events, alarms, and timers |
+| 📰 **Daily Briefing** | AI-curated news from Technology, Science, and Top Stories |
+| 🌤️ **Weather** | Current weather and hourly forecast on your dashboard |
+| 🔍 **Web Search** | Search the web through voice or chat commands |
+| 🖥️ **System Monitor** | Real-time CPU and memory usage in the title bar |
 
-1. **Clone the repository**:
-   ```bash
-   git clone <repository-url>
-   cd pocket_ai
-   ```
+---
 
-2. **Install dependencies**:
-   ```bash
-   pip install PySide6 qfluentwidgets requests duckduckgo-search python-kasa piper-tts sounddevice numpy torch transformers
-   ```
+## 📸 Screenshots
 
-3. **Model Setup**:
-   - Install **Ollama** from [ollama.com](https://ollama.com).
-   - Pull the responder model (default: `qwen3:1.7b`):
-     ```bash
-     ollama pull qwen3:1.7b
-     ```
-   - Ensure you have the fine-tuned Router model in the `./merged_model` directory (or update the path in `config.py`).
+*The application features a sleek Windows 11 Fluent Design aesthetic with dark mode support.*
 
-## ⚙️ Configuration
+---
 
-Main configuration is located in `config.py`. Key settings include:
-- `RESPONDER_MODEL`: The Ollama model to use for chat.
-- `OLLAMA_URL`: Local endpoint for Ollama (default: `http://localhost:11434/api`).
-- `LOCAL_ROUTER_PATH`: Path to the fine-tuned FunctionGemma router.
-- `ROUTER_KEYWORDS`: Keywords that trigger specialized routing.
+## 📋 Prerequisites
 
-## 🖥️ Usage
+Before you begin, make sure you have:
 
-Run the application using the main entry point:
+### Required Software
+
+| Software | Purpose | Installation |
+|----------|---------|--------------|
+| **Python 3.10+** | Runtime | [python.org](https://www.python.org/downloads/) |
+| **Ollama** | Local AI model server | [ollama.com](https://ollama.com) |
+| **NVIDIA GPU** (Recommended) | Faster AI inference | GPU with 4GB+ VRAM |
+
+### Hardware Recommendations
+
+- **Minimum**: 8GB RAM, any modern CPU
+- **Recommended**: 16GB RAM, NVIDIA GPU with 6GB+ VRAM
+- **Storage**: ~5GB for models and voice data
+
+---
+
+## 🚀 Quick Start Guide
+
+Follow these steps to get A.D.A running on your system:
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/your-username/pocket_ai.git
+cd pocket_ai
+```
+
+### Step 2: Create a Virtual Environment (Recommended)
+
+Using a virtual environment keeps your project dependencies isolated:
+
+```bash
+# Create a virtual environment
+python -m venv venv
+
+# Activate it (Windows)
+venv\Scripts\activate
+
+# Activate it (macOS/Linux)
+source venv/bin/activate
+```
+
+### Step 3: Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+> ⏱️ **Note**: First installation may take 5-10 minutes as PyTorch and other large packages are downloaded.
+
+### Step 4: Install Ollama & Download Models
+
+1. Download and install Ollama from [ollama.com](https://ollama.com)
+2. Open a terminal and pull the required model:
+
+```bash
+# Pull the responder model (1.7B parameters, ~1.5GB)
+ollama pull qwen3:1.7b
+```
+
+3. Verify Ollama is running:
+```bash
+ollama list
+```
+
+You should see `qwen3:1.7b` in the list.
+
+### Step 5: Run the Application
 
 ```bash
 python main.py
 ```
 
-### Key Controls:
-- **Navigation**: Use the sidebar to switch between Dashboard, Chat, Planner, Briefing, Home Auto, and Web Agent.
-- **Voice**: Toggle TTS in the Chat tab to hear responses.
-- **Home Auto**: Click the "Refresh" icon to scan for Kasa devices on your local network.
+🎉 **That's it!** A.D.A should now launch with a beautiful GUI.
 
-## 🏗️ Architecture
+---
 
-A.D.A is built using a modern Python stack:
-- **UI Framework**: [PySide6](https://doc.qt.io/qtforpython/) with [QFluentWidgets](https://github.com/zhiyiYo/PyQt-Fluent-Widgets) for a sleek Windows 11 aesthetic.
-- **AI Backend**: [Ollama](https://ollama.com/) for local LLM inference.
-- **Routing**: [Transformers](https://huggingface.co/docs/transformers/) with a fine-tuned Gemma model for intent recognition.
-- **Services**:
-  - **Weather**: Open-Meteo API (No key required).
-  - **News**: DuckDuckGo Search.
-  - **Storage**: SQLite for local calendar and chat history.
-  - **TTS**: Piper for localized, fast speech synthesis.
+## 🎙️ Voice Assistant Setup
 
-## 📄 License
+A.D.A includes Alexa-like voice control with wake word detection.
 
-[Insert License Info Here]
+### How It Works
+
+1. Say **"Jarvis"** to wake the assistant
+2. Speak your command naturally
+3. A.D.A processes your request and responds
+
+### Example Voice Commands
+
+| Command | What It Does |
+|---------|--------------|
+| *"Jarvis, turn on the office lights"* | Controls smart lights |
+| *"Jarvis, set a timer for 10 minutes"* | Creates a countdown timer |
+| *"Jarvis, what's on my schedule today?"* | Reads your calendar |
+| *"Jarvis, search the web for Python tutorials"* | Performs web search |
+| *"Jarvis, add buy groceries to my to-do list"* | Creates a task |
+
+### Voice Configuration
+
+Edit `config.py` to customize:
+
+```python
+# Change wake word (default: "jarvis")
+WAKE_WORD = "jarvis"
+
+# Adjust sensitivity (0.0-1.0, lower = less false positives)
+WAKE_WORD_SENSITIVITY = 0.4
+
+# Enable/disable voice assistant
+VOICE_ASSISTANT_ENABLED = True
+```
+
+---
+
+## ⚙️ Configuration
+
+All configuration is centralized in `config.py`:
+
+### AI Models
+
+```python
+# The main chat model (runs on Ollama)
+RESPONDER_MODEL = "qwen3:1.7b"
+
+# Ollama server URL
+OLLAMA_URL = "http://localhost:11434/api"
+
+# Path to the fine-tuned router model
+LOCAL_ROUTER_PATH = "./merged_model"
+```
+
+### Text-to-Speech
+
+```python
+# Voice model (downloads automatically on first run)
+TTS_VOICE_MODEL = "en_GB-northern_english_male-medium"
+```
+
+### Weather Location
+
+The default location is New York City. To change it:
+
+1. Open the app
+2. Go to **Settings** tab
+3. Enter your latitude and longitude
+
+---
+
+## 🏗️ Project Architecture
+
+```
+pocket_ai/
+├── main.py                 # Application entry point
+├── config.py               # Centralized configuration
+├── requirements.txt        # Python dependencies
+│
+├── core/                   # Backend logic
+│   ├── router.py           # FunctionGemma intent classifier
+│   ├── function_executor.py # Executes routed functions
+│   ├── voice_assistant.py  # Voice pipeline orchestrator
+│   ├── stt.py              # Speech-to-text with wake word
+│   ├── tts.py              # Piper text-to-speech
+│   ├── kasa_control.py     # Smart home device control
+│   ├── weather.py          # Open-Meteo weather API
+│   ├── news.py             # DuckDuckGo news + AI curation
+│   ├── tasks.py            # To-do list management
+│   ├── calendar_manager.py # Local calendar/events
+│   ├── history.py          # SQLite chat history
+│   └── llm.py              # Ollama LLM interface
+│
+├── gui/                    # PySide6 GUI
+│   ├── app.py              # Main window setup
+│   ├── handlers.py         # Chat message handling
+│   ├── tabs/               # Individual tab screens
+│   │   ├── dashboard.py    # Weather + status overview
+│   │   ├── chat.py         # AI chat interface
+│   │   ├── planner.py      # Calendar + tasks
+│   │   ├── briefing.py     # AI news curation
+│   │   ├── home_automation.py  # Smart device control
+│   │   └── settings.py     # App configuration
+│   └── components/         # Reusable UI widgets
+│
+├── merged_model/           # Fine-tuned FunctionGemma router
+└── demo.py                 # Standalone voice assistant demo
+```
+
+### How It Works
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────┐
+│  User Input │────▶│ FunctionGemma   │────▶│  Function   │
+│  (Voice/Text)  │     │   Router         │     │  Executor   │
+└─────────────┘     └──────────────────┘     └──────┬──────┘
+                                                    │
+       ┌────────────────────────────────────────────┼────────────────┐
+       │                                            │                │
+       ▼                                            ▼                ▼
+┌──────────────┐                          ┌──────────────┐   ┌──────────────┐
+│  Kasa Lights │                          │   Calendar   │   │  Web Search  │
+└──────────────┘                          └──────────────┘   └──────────────┘
+                                                    │
+                                                    ▼
+                                          ┌──────────────┐
+                                          │ Qwen LLM     │
+                                          │ (via Ollama) │
+                                          └──────────────┘
+                                                    │
+                                                    ▼
+                                          ┌──────────────┐
+                                          │ Piper TTS    │
+                                          │ (Voice Out)  │
+                                          └──────────────┘
+```
+
+1. **User speaks or types** a command
+2. **FunctionGemma Router** (fine-tuned local AI) classifies intent
+3. **Function Executor** runs the appropriate action
+4. **Qwen LLM** generates a natural language response
+5. **Piper TTS** speaks the response (if voice enabled)
+
+---
+
+## 🏠 Smart Home Integration
+
+A.D.A supports **TP-Link Kasa** smart devices:
+
+### Supported Devices
+
+- ✅ Smart bulbs (on/off, brightness, color)
+- ✅ Smart plugs (on/off)
+- ✅ Smart light strips
+
+### Setup
+
+1. Ensure your Kasa devices are on the same network as your computer
+2. Open A.D.A and go to the **Home Automation** tab
+3. Click **Refresh** to scan for devices
+4. Control devices through the GUI or voice commands
+
+### Voice Commands
+
+```
+"Turn on the living room lights"
+"Set the bedroom lights to 50%"
+"Turn off all lights"
+"Change the office light to blue"
+```
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Issues
+
+<details>
+<summary><strong>❌ Ollama connection refused</strong></summary>
+
+**Problem**: The app can't connect to Ollama.
+
+**Solution**:
+1. Make sure Ollama is running: `ollama serve`
+2. Check if the model is downloaded: `ollama list`
+3. Verify the URL in `config.py` matches your setup
+
+</details>
+
+<details>
+<summary><strong>❌ CUDA/GPU not detected</strong></summary>
+
+**Problem**: PyTorch is running on CPU instead of GPU.
+
+**Solution**:
+1. Install CUDA-compatible PyTorch:
+   ```bash
+   pip install torch --index-url https://download.pytorch.org/whl/cu121
+   ```
+2. Verify CUDA: `python -c "import torch; print(torch.cuda.is_available())"`
+
+</details>
+
+<details>
+<summary><strong>❌ Voice assistant not working</strong></summary>
+
+**Problem**: Wake word isn't being detected.
+
+**Solution**:
+1. Check your microphone permissions
+2. Ensure `realtimestt` is installed: `pip install realtimestt`
+3. Try lowering `WAKE_WORD_SENSITIVITY` in `config.py`
+
+</details>
+
+<details>
+<summary><strong>❌ Smart devices not found</strong></summary>
+
+**Problem**: Kasa devices don't appear in the app.
+
+**Solution**:
+1. Ensure devices are on the same WiFi network
+2. Try the Kasa app first to verify devices work
+3. Check firewall isn't blocking device discovery (UDP port 9999)
+
+</details>
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Here's how to get started:
+
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes
+4. Run tests: `pytest tests/`
+5. Submit a pull request
+
+---
+
+## 📜 License
+
+This project is open source. See [LICENSE](LICENSE) for details.
+
+---
+
+## 🙏 Acknowledgments
+
+- [Ollama](https://ollama.com/) - Local LLM inference
+- [QFluentWidgets](https://github.com/zhiyiYo/PyQt-Fluent-Widgets) - Beautiful UI components
+- [Piper TTS](https://github.com/rhasspy/piper) - Lightweight text-to-speech
+- [python-kasa](https://github.com/python-kasa/python-kasa) - Kasa device control
+- [RealTimeSTT](https://github.com/KoljaB/RealtimeSTT) - Speech recognition
+
+---
+
+<p align="center">
+  Made with ❤️ for local AI enthusiasts
+</p>
