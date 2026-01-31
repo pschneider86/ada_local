@@ -6,3 +6,4 @@ merged_model_adapter/
 functiongemma-270m-ft/
 merged_model/
 __pycache__/
+chat_history.db
