@@ -46,14 +46,6 @@ def route_query(user_input):
     try:
         # Route using the fine-tuned model - returns (func_name, params)
         (func_name, params), elapsed = router.route_with_timing(user_input)
-        
-        # DEBUG: Print routing result
-        print(f"\n{'='*60}")
-        print(f"[LLM Route] Input: {user_input}")
-        print(f"[LLM Route] Result: {func_name}({params})")
-        print(f"[LLM Route] Time: {elapsed*1000:.0f}ms")
-        print(f"{'='*60}\n")
-        
         return func_name, params
             
     except Exception as e:
@@ -113,8 +105,6 @@ def preload_models():
         global router
         try:
             router = FunctionGemmaRouter(model_path=LOCAL_ROUTER_PATH, compile_model=False)
-            # Warm up
-            router.route("Hello")
         except Exception as e:
             print(f"{GRAY}[Router] Failed to load local model: {e}{RESET}")
 

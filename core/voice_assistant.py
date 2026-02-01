@@ -71,7 +71,7 @@ class VoiceAssistant(QObject):
             print(f"{CYAN}[VoiceAssistant] ✓ STT initialized{RESET}")
             
             # Ensure TTS is initialized
-            if not tts.voice:
+            if not tts.piper_exe:
                 print(f"{CYAN}[VoiceAssistant] Initializing TTS...{RESET}")
                 tts.initialize()
                 print(f"{CYAN}[VoiceAssistant] ✓ TTS initialized{RESET}")
